@@ -141,8 +141,10 @@ func (m *NvidiaDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.Device
 		Debugf("%s	", v.ID)
 	}
 	for {
+		Debugf("For in ListAndWatch--------------\n")
 		select {
 		case <-m.stop:
+			Debugf("Stop ListAndWatch----\n")
 			return nil
 		case d := <-m.health:
 			Debugf("Device %s is unhealthy\n", d.ID)
@@ -151,6 +153,8 @@ func (m *NvidiaDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.Device
 			s.Send(&pluginapi.ListAndWatchResponse{Devices: m.devs})
 		}
 	}
+	Debugf("End ListAndWatch--------------\n")
+	return nil
 }
 
 func (m *NvidiaDevicePlugin) unhealthy(dev *pluginapi.Device) {
