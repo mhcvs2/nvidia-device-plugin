@@ -17,7 +17,7 @@ var debug bool
 
 func Debugf(format string, v ...interface{}) {
 	if debug {
-		log.Printf(format, v)
+		log.Printf(format, v...)
 	}
 }
 //-------------------------
