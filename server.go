@@ -136,7 +136,11 @@ func (m *NvidiaDevicePlugin) Register(kubeletEndpoint, resourceName string) erro
 func (m *NvidiaDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.DevicePlugin_ListAndWatchServer) error {
 	Debugf("ListAndWatch---------------\n")
 	s.Send(&pluginapi.ListAndWatchResponse{Devices: m.devs})
-
+	Debugf("list devices' id: \n")
+	for _, v := range m.devs {
+		Debugf("%s	", v.ID)
+	}
+	Debugf("\n")
 	for {
 		select {
 		case <-m.stop:
