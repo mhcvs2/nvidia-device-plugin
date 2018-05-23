@@ -140,7 +140,6 @@ func (m *NvidiaDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.Device
 	for _, v := range m.devs {
 		Debugf("%s	", v.ID)
 	}
-	Debugf("\n")
 	for {
 		select {
 		case <-m.stop:
@@ -170,13 +169,20 @@ func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 			},
 		}
 
+		Debugf("Req dev ids: ")
 		for _, id := range req.DevicesIDs {
+			Debugf("%s	", id)
 			if !deviceExists(devs, id) {
 				return nil, fmt.Errorf("invalid allocation request: unknown device: %s", id)
 			}
 		}
 
 		responses.ContainerResponses = append(responses.ContainerResponses, &response)
+
+		if v, ok := response.Envs["NVIDIA_VISIBLE_DEVICES"]; ok {
+			Debugf("response.Envs.NVIDIA_VISIBLE_DEVICES: \n")
+			Debugf("%s\n", v)
+		}
 	}
 
 	return &responses, nil
