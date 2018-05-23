@@ -12,7 +12,24 @@ import (
 	pluginapi "k8s.io/kubernetes/pkg/kubelet/apis/deviceplugin/v1beta1"
 )
 
+//Hongchao
+var debug bool
+
+func Debugf(format string, v ...interface{}) {
+	if debug {
+		log.Printf(format, v)
+	}
+}
+//-------------------------
+
 func main() {
+	//Hongchao
+	if os.Getenv("DEBUG") != "" {
+		debug = true
+	} else {
+		debug = false
+	}
+	//-----------------------
 	log.Println("Loading NVML")
 	if err := nvml.Init(); err != nil {
 		log.Printf("Failed to initialize NVML: %s.", err)

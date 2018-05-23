@@ -67,6 +67,7 @@ func dial(unixSocketPath string, timeout time.Duration) (*grpc.ClientConn, error
 
 // Start starts the gRPC server of the device plugin
 func (m *NvidiaDevicePlugin) Start() error {
+	Debugf("Start---------------\n")
 	err := m.cleanup()
 	if err != nil {
 		return err
@@ -96,6 +97,7 @@ func (m *NvidiaDevicePlugin) Start() error {
 
 // Stop stops the gRPC server
 func (m *NvidiaDevicePlugin) Stop() error {
+	Debugf("Stop---------------\n")
 	if m.server == nil {
 		return nil
 	}
@@ -109,6 +111,7 @@ func (m *NvidiaDevicePlugin) Stop() error {
 
 // Register registers the device plugin for the given resourceName with Kubelet.
 func (m *NvidiaDevicePlugin) Register(kubeletEndpoint, resourceName string) error {
+	Debugf("Register---------------\n")
 	conn, err := dial(kubeletEndpoint, 5*time.Second)
 	if err != nil {
 		return err
@@ -131,6 +134,7 @@ func (m *NvidiaDevicePlugin) Register(kubeletEndpoint, resourceName string) erro
 
 // ListAndWatch lists devices and update that list according to the health status
 func (m *NvidiaDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.DevicePlugin_ListAndWatchServer) error {
+	Debugf("ListAndWatch---------------\n")
 	s.Send(&pluginapi.ListAndWatchResponse{Devices: m.devs})
 
 	for {
@@ -138,6 +142,7 @@ func (m *NvidiaDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.Device
 		case <-m.stop:
 			return nil
 		case d := <-m.health:
+			Debugf("Device %s is unhealthy\n", d.ID)
 			// FIXME: there is no way to recover from the Unhealthy state.
 			d.Health = pluginapi.Unhealthy
 			s.Send(&pluginapi.ListAndWatchResponse{Devices: m.devs})
@@ -151,6 +156,7 @@ func (m *NvidiaDevicePlugin) unhealthy(dev *pluginapi.Device) {
 
 // Allocate which return list of devices.
 func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.AllocateRequest) (*pluginapi.AllocateResponse, error) {
+	Debugf("Allocate---------------\n")
 	devs := m.devs
 	responses := pluginapi.AllocateResponse{}
 	for _, req := range reqs.ContainerRequests {
@@ -173,6 +179,7 @@ func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 }
 
 func (m *NvidiaDevicePlugin) PreStartContainer(context.Context, *pluginapi.PreStartContainerRequest) (*pluginapi.PreStartContainerResponse, error) {
+	Debugf("PreStartContainer---------------\n")
 	return &pluginapi.PreStartContainerResponse{}, nil
 }
 
@@ -218,7 +225,17 @@ func (m *NvidiaDevicePlugin) Serve() error {
 	}
 	log.Println("Starting to serve on", m.socket)
 
-	err = m.Register(pluginapi.KubeletSocket, resourceName)
+	//Hongchao Ma
+	var newName string
+	if gpuType := os.Getenv("GPU_TYPE"); gpuType != "" {
+		newName = fmt.Sprintf("%s-%s", resourceName, gpuType)
+	} else {
+		newName = resourceName
+	}
+
+	err = m.Register(pluginapi.KubeletSocket, newName)
+	//err = m.Register(pluginapi.KubeletSocket, resourceName)
+	//-------------------------------------------
 	if err != nil {
 		log.Printf("Could not register device plugin: %s", err)
 		m.Stop()
