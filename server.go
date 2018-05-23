@@ -135,7 +135,9 @@ func (m *NvidiaDevicePlugin) Register(kubeletEndpoint, resourceName string) erro
 // ListAndWatch lists devices and update that list according to the health status
 func (m *NvidiaDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.DevicePlugin_ListAndWatchServer) error {
 	Debugf("ListAndWatch---------------\n")
-	s.Send(&pluginapi.ListAndWatchResponse{Devices: m.devs})
+	if err := s.Send(&pluginapi.ListAndWatchResponse{Devices: m.devs}); err != nil {
+		log.Printf("send to kubelet error: %s", err.Error())
+	}
 	Debugf("list devices' id: \n")
 	for _, v := range m.devs {
 		Debugf("%s	", v.ID)
